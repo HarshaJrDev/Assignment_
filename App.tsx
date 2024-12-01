@@ -1,118 +1,79 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
+import 'react-native-gesture-handler';
 import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import { View, Button } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import ZegoUIKitPrebuiltLiveStreaming, {
+  HOST_DEFAULT_CONFIG,
+  AUDIENCE_DEFAULT_CONFIG
+} from '@zegocloud/zego-uikit-prebuilt-live-streaming-rn';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+const Stack = createStackNavigator();
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+function HomePage({ navigation, route }) {
+  const { isHost } = route.params || {}; 
+  const randomUserID = String(Math.floor(Math.random() * 100000)); 
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  console.log('isHost:', isHost); 
+  console.log('randomUserID:', randomUserID);
+
+  if (isHost !== undefined) {
+    console.log('Rendering live streaming as Host or Audience');
+
+    return (
+      <View style={{ flex: 1 }}>
+        <ZegoUIKitPrebuiltLiveStreaming
+          appID={404748616} 
+          appSign="dd6543a1074851b06352581ac349b440a8e9f43b9a6ff4579abae8abc627066c" 
+          userID={randomUserID}
+          userName={`user_${randomUserID}`}
+          liveID="testLiveID"
+          config={{
+            ...(isHost ? HOST_DEFAULT_CONFIG : AUDIENCE_DEFAULT_CONFIG),
+            onLeaveLiveStreaming: () => {
+              console.log('Left live streaming, navigating back to HomePage');
+              navigation.navigate('HomePage', { isHost: undefined });
+            },
+            onJoinLiveStreaming: () => {
+              console.log('Successfully joined live streaming');
+            },
+            onError: (error) => {
+              console.error('Error joining stream:', error);
+            }
+          }}
+        />
+      </View>
+    );
+  }
+
+  console.log('Rendering HomePage with buttons');
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'space-around' }}>
+      <Button
+        title="Start a Live"
+        onPress={() => {
+          console.log('Navigating to HomePage with isHost true');
+          navigation.navigate('HomePage', { isHost: true }); 
+        }}
+      />
+      <Button
+        title="Watch a Live"
+        onPress={() => {
+          console.log('Navigating to HomePage with isHost false');
+          navigation.navigate('HomePage', { isHost: false }); 
+        }}
+      />
     </View>
   );
 }
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
+export default function App() {
+  console.log('App starting, rendering NavigationContainer');
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="HomePage" component={HomePage} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
-
-export default App;
